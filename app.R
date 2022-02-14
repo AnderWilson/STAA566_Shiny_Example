@@ -1,4 +1,3 @@
-## app.R ##
 library(shiny)
 library(shinydashboard)
 library(babynames)
@@ -8,22 +7,34 @@ library(plotly)
 
 
 ui <- dashboardPage(
+  
+  # format
   skin="blue",
-  dashboardHeader(title="Baby Names"),
+  
+  # define the title
+  dashboardHeader(
+    title="Baby Names"
+  ),
+  
+  # define the sidebar
   dashboardSidebar(
-    
+    # set sidebar menu  
     sidebarMenu(
       textInput("in_name","Name",value="Ander"),
-      menuItem("Name by Year", tabName = "by_year", icon = icon("by year")),
-      menuItem("Similar names", tabName = "similar", icon = icon("similar"))
+      menuItem("Name by Year", tabName = "by_year"),
+      menuItem("Similar names", tabName = "similar")
     )
   ),
+  
+  # define the body
   dashboardBody(
     tabItems(
+      # first page
       tabItem("by_year",
               h2("Babies named",textOutput("in_name1", inline=TRUE),"by year of birth and sex"),
               box(plotlyOutput("p_timeseries"), width= 500)
       ),
+      # second page
       tabItem("similar",
               h2("Babies with names similar to ",textOutput("in_name2", inline=TRUE)),
               h3("10 most similar names in the last 10 years by sex"),
@@ -32,14 +43,16 @@ ui <- dashboardPage(
               box(dataTableOutput("t_similar"), width= 500)
       )
     )
-    
-    
-    
   )
+  
 )
 
 server <- function(input, output) {
   
+  # --------------------------------------------------
+  # define the name for titling
+  # --------------------------------------------------
+  # define the name twice to be used twice above
   output$in_name1 <- renderText({
     input$in_name
   })
@@ -53,7 +66,7 @@ server <- function(input, output) {
   output$p_timeseries <- renderPlotly({
     
     in_name <-  input$in_name
-   
+    
     p_timeseries <- ggplot(babynames %>% filter(name==in_name),
                            aes(x=year,
                                y=n,
@@ -75,6 +88,7 @@ server <- function(input, output) {
   # --------------------------------------------------
   output$p_timeseries_similar <- renderPlotly({
     
+    # get name
     in_name <-  input$in_name
     
     # find similar names
@@ -90,8 +104,7 @@ server <- function(input, output) {
                                      filter(name%in%close_names & 
                                               year > 2010) %>%
                                      group_by(name, sex) %>%
-                                     summarise(n=sum(n),
-                                               prop=mean(p)),
+                                     summarise(n=sum(n)),
                                    aes(x=name,
                                        y=n,
                                        fill=sex)) +
@@ -100,10 +113,16 @@ server <- function(input, output) {
       theme_minimal() +
       theme(axis.title = element_blank()) 
     
+    # plotly for final graph
     ggplotly(p_timeseries_similar)
   })
   
+  # --------------------------------------------------
+  # table of similar names
+  # --------------------------------------------------
   output$t_similar <- renderDataTable({
+    
+    # get name
     in_name <-  input$in_name
     
     # find similar names
@@ -129,14 +148,7 @@ server <- function(input, output) {
       mutate(female=paste0(round(100*female/total),"%"),
              male=paste0(round(100*male/total),"%")) %>%
       arrange(rank)
-    
-  
-        
-    
   })
-  
-  
-  
   
 }
 
