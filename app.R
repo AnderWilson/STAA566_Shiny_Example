@@ -38,7 +38,7 @@ ui <- dashboardPage(
       tabItem("similar",
               h2("Babies with names similar to ",textOutput("in_name2", inline=TRUE)),
               h3("10 most similar names in the last 10 years by sex"),
-              box(plotlyOutput("p_timeseries_similar"), width= 500),
+              box(plotlyOutput("p_hist_similar"), width= 500),
               h3("100 most similar names all time"),
               box(dataTableOutput("t_similar"), width= 500)
       )
@@ -86,7 +86,7 @@ server <- function(input, output) {
   # --------------------------------------------------
   # time series of similar names
   # --------------------------------------------------
-  output$p_timeseries_similar <- renderPlotly({
+  output$p_hist_similar <- renderPlotly({
     
     # get name
     in_name <-  input$in_name
@@ -100,21 +100,21 @@ server <- function(input, output) {
     close_names <- unique_names[order(dist)][2:11]
     
     # plot
-    p_timeseries_similar <- ggplot(babynames %>% 
-                                     filter(name%in%close_names & 
-                                              year > 2010) %>%
-                                     group_by(name, sex) %>%
-                                     summarise(n=sum(n)),
-                                   aes(x=name,
-                                       y=n,
-                                       fill=sex)) +
+    p_hist_similar <- ggplot(babynames %>% 
+                               filter(name%in%close_names & 
+                                        year > 2010) %>%
+                               group_by(name, sex) %>%
+                               summarise(n=sum(n)),
+                             aes(x=name,
+                                 y=n,
+                                 fill=sex)) +
       geom_histogram(stat="identity",
                      position = position_dodge2(preserve = "single")) + 
       theme_minimal() +
       theme(axis.title = element_blank()) 
     
     # plotly for final graph
-    ggplotly(p_timeseries_similar)
+    ggplotly(p_hist_similar)
   })
   
   # --------------------------------------------------
